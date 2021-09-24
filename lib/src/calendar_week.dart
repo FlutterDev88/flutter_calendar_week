@@ -65,14 +65,14 @@ Example:
   bool get hasClient => _hasClient;
 
   /// Store a selected date
-  DateTime? _selectedDate;
+  DateTime? _selectedDate = DateTime.now();
 
   /// Get [_selectedDate] selected;
   DateTime get selectedDate => _selectedDate ?? _today;
 
   /// get [_weeks]
-  List<DateTime?> get rangeWeekDate => _weeks.isNotEmpty
-      ? _weeks[_currentWeekIndex].days.where((ele) => ele != null).toList()
+  List<DateTime?> get rangeWeekDate => _weeksList.isNotEmpty
+      ? _weeksList[_currentWeekIndex].days.where((ele) => ele != null).toList()
       : [];
 
   /// [Callback] for update widget event
@@ -82,12 +82,12 @@ Example:
   int _currentWeekIndex = 0;
 
   /// Store a list [DateTime] of weeks display on the screen
-  final List<WeekItem> _weeks = [];
+  final List<WeekItem> _weeksList = [];
 
   /// [jumpToDate] show week contain [date] on the screen
   void jumpToDate(DateTime date) {
     /// Find [_newCurrentWeekIndex] corresponding new [dateTime]
-    final _newCurrentWeekIndex = findCurrentWeekIndexByDate(date, _weeks);
+    final _newCurrentWeekIndex = findCurrentWeekIndexByDate(date, _weeksList);
 
     /// If has matched, update [_currentWeekIndex], [_selectedDate]
     /// and call [_widgetJumpToDate] for update widget
@@ -219,19 +219,29 @@ class CalendarWeek extends StatefulWidget {
           DateTime? maxDate,
           DateTime? minDate,
           double height = 100,
-          TextStyle monthStyle =
-              const TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
-          TextStyle dayOfWeekStyle =
-              const TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
+          TextStyle monthStyle = const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: kBodyFontSize4),
+          TextStyle dayOfWeekStyle = const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: kBodyFontSize3),
           FractionalOffset monthAlignment = FractionalOffset.center,
-          TextStyle dateStyle =
-              const TextStyle(color: Colors.blue, fontWeight: FontWeight.w400),
+          TextStyle dateStyle = const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: kBodyFontSize3),
           TextStyle todayDateStyle = const TextStyle(
-              color: Colors.orange, fontWeight: FontWeight.w400),
-          Color todayBackgroundColor = Colors.black12,
-          Color pressedDateBackgroundColor = Colors.blue,
-          TextStyle pressedDateStyle =
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: kBodyFontSize3),
+          Color todayBackgroundColor = Colors.transparent,
+          Color pressedDateBackgroundColor = kSelectedColor,
+          TextStyle pressedDateStyle = const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: kBodyFontSize3),
           Color dateBackgroundColor = Colors.transparent,
           Function(DateTime)? onDatePressed,
           Function(DateTime)? onDateLongPressed,
@@ -240,8 +250,10 @@ class CalendarWeek extends StatefulWidget {
           List<String> month = monthDefaults,
           bool showMonth = true,
           List<int> weekendsIndexes = weekendsIndexesDefault,
-          TextStyle weekendsStyle =
-              const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+          TextStyle weekendsStyle = const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: kBodyFontSize3),
           EdgeInsets marginMonth = const EdgeInsets.symmetric(vertical: 4),
           EdgeInsets marginDayOfWeek = const EdgeInsets.symmetric(vertical: 4),
           CircleBorder dayShapeBorder = const CircleBorder(),
@@ -306,14 +318,14 @@ class _CalendarWeekState extends State<CalendarWeek> {
     assert(controller.hasClient == false);
     _stream ??= _cacheStream.stream!.asBroadcastStream();
     controller
-      .._weeks.clear()
-      .._weeks.addAll(separateWeeks(
+      .._weeksList.clear()
+      .._weeksList.addAll(separateWeeks(
           widget.minDate, widget.maxDate, widget.daysOfWeek, widget.months))
 
       /// [_currentWeekIndex] is index of week in [List] weeks contain today
 
       .._currentWeekIndex =
-          findCurrentWeekIndexByDate(controller._today, controller._weeks)
+          findCurrentWeekIndexByDate(controller._today, controller._weeksList)
       .._widgetJumpToDate = _jumToDateHandler
       .._hasClient = true;
 
@@ -329,49 +341,162 @@ class _CalendarWeekState extends State<CalendarWeek> {
   }
 
   @override
-  Widget build(BuildContext context) => _body();
+  Widget build(BuildContext context) {
+    if (controller._weeksList.length == 0) {
+      _setUp();
+    }
+
+    return _body();
+  }
 
   /// Body layout
   Widget _body() => Container(
-      color: widget.backgroundColor,
-      width: double.infinity,
-      height: widget.height,
-      child: PageView.builder(
-        controller: _pageController,
-        itemCount: controller._weeks.length,
-        onPageChanged: (currentPage) {
-          widget.controller!._currentWeekIndex = currentPage;
-          widget.onWeekChanged();
-        },
-        itemBuilder: (_, i) => _week(controller._weeks[i]),
-      ));
+        child: Column(
+          children: [
+            // Month
+            widget.monthDisplay
+                ? _monthItem(
+                    controller._weeksList[controller._currentWeekIndex].month)
+                : Container(),
+            Container(
+              color: Colors.transparent,
+              width: double.infinity,
+              height: widget.height,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: controller._weeksList.length,
+                onPageChanged: (currentPage) {
+                  setState(() {
+                    widget.controller!._currentWeekIndex = currentPage;
+                  });
+                  // widget.onWeekChanged();
+                },
+                itemBuilder: (_, i) => _week(controller._weeksList[i]),
+              ),
+            ),
+          ],
+        ),
+      );
 
   /// Layout of week
   Widget _week(WeekItem weeks) => Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          // Month
-          widget.monthDisplay ? _monthItem(weeks.month) : Container(),
-
           /// Day of week layout
           _dayOfWeek(weeks.dayOfWeek),
 
+          Container(height: 2, color: Colors.white),
+
           /// Date layout
-          _dates(weeks.days)
+          _dates(weeks.days),
+
+          RowDotLine(dashWidth: 5, color: Colors.white),
         ],
       );
 
   /// Day of week item layout
   Widget _monthItem(String title) => Align(
-        alignment: widget.monthAlignment,
+        // alignment: widget.monthAlignment,
         child: Container(
-            margin: widget.marginMonth,
-            child: Text(
-              title,
-              style: widget.monthStyle,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            )),
+          // margin: widget.marginDayOfWeek,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                  padding: EdgeInsets.all(0),
+                  onPressed: () {
+                    String beforeMonthName = '';
+                    for (int i = controller._currentWeekIndex - 1;
+                        i >= 0;
+                        i--) {
+                      if (beforeMonthName.isEmpty != true) {
+                        if (controller._weeksList[i].month == beforeMonthName) {
+                          if (i == 0) {
+                            setState(() {
+                              controller._currentWeekIndex = 0;
+
+                              _pageController.animateToPage(
+                                0,
+                                duration: Duration(microseconds: 500),
+                                curve: Curves.easeIn,
+                              );
+                            });
+                          }
+                          
+                          continue;
+                        } else {
+                          setState(() {
+                            controller._currentWeekIndex = i + 1;
+
+                            _pageController.animateToPage(
+                              i + 1,
+                              duration: Duration(microseconds: 500),
+                              curve: Curves.easeIn,
+                            );
+                          });
+                          break;
+                        }
+                      }
+                      else {
+                        if (controller._weeksList[i].month ==
+                            controller
+                                ._weeksList[controller._currentWeekIndex].month) {
+                          continue;
+                        } else {
+                          beforeMonthName = controller._weeksList[i].month;
+
+                          if (i == 0) {
+                            setState(() {
+                              controller._currentWeekIndex = 0;
+
+                              _pageController.animateToPage(
+                                0,
+                                duration: Duration(microseconds: 500),
+                                curve: Curves.easeIn,
+                              );
+                            });
+                          }
+                        }
+                      }
+                    }
+                  },
+                  icon: Icon(Icons.chevron_left,
+                      color: kSelectedColor, size: kPadding6)),
+              Text(
+                title,
+                style: widget.monthStyle,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+              IconButton(
+                  padding: EdgeInsets.all(0),
+                  onPressed: () {
+                    for (int i = controller._currentWeekIndex + 1;
+                        i < widget.controller!._weeksList.length;
+                        i++) {
+                      if (controller._weeksList[i].month ==
+                          controller
+                              ._weeksList[controller._currentWeekIndex].month) {
+                        continue;
+                      } else {
+                        setState(() {
+                          controller._currentWeekIndex = i;
+
+                          _pageController.animateToPage(
+                            i,
+                            duration: Duration(microseconds: 500),
+                            curve: Curves.easeIn,
+                          );
+                        });
+                        break;
+                      }
+                    }
+                  },
+                  icon: Icon(Icons.chevron_right,
+                      color: kSelectedColor, size: kPadding6)),
+            ],
+          ),
+        ),
       );
 
   /// Day of week layout
@@ -390,7 +515,7 @@ class _CalendarWeekState extends State<CalendarWeek> {
         child: Container(
           width: 50,
           child: Text(
-            title,
+            title.substring(0, 1),
             style: widget.weekendsIndexes
                         .indexOf(widget.daysOfWeek.indexOf(title)) !=
                     -1

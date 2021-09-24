@@ -14,18 +14,18 @@ const List<String> dayOfWeekDefault = [
 
 /// List contain titles month
 const List<String> monthDefaults = [
-  'JANUARY',
-  'FEBRUARY',
-  'MARCH',
-  'APRIL',
-  'MAY',
-  'JUNE',
-  'JULY',
-  'AUGUST',
-  'SEPTEMBER',
-  'OCTOBER',
-  'NOVEMBER',
-  'DECEMBER'
+  'January',
+  'February',
+  'March',
+  'Apirl',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'Octorber',
+  'November',
+  'December'
 ];
 
 const List<int> weekendsIndexesDefault = [5, 6];
