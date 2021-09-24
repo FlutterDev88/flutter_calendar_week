@@ -106,8 +106,8 @@ class __DateItemState extends State<DateItem> {
 
   /// Body layout
   Widget _body() => Container(
-        width: 50,
-        height: 50,
+        width: 30,
+        height: 30,
         alignment: FractionalOffset.center,
         child: GestureDetector(
           onLongPress: _onLongPressed,
