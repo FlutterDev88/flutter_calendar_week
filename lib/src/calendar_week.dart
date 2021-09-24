@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_calendar_week/src/constant.dart';
 import 'package:flutter_calendar_week/src/models/decoration_item.dart';
 import 'package:flutter_calendar_week/src/models/week_item.dart';
 import 'package:flutter_calendar_week/src/date_item.dart';
+import 'package:flutter_calendar_week/src/utils/dot_line.dart';
 import 'package:flutter_calendar_week/src/utils/find_current_week_index.dart';
 import 'package:flutter_calendar_week/src/utils/separate_weeks.dart';
 import 'package:flutter_calendar_week/src/utils/compare_date.dart';
